@@ -1,6 +1,7 @@
-<img src="frontend/img/logo.png" width="200" height="auto" alt="Keepr Logo" class="logo-light">
-<img src="frontend/img/logo-invert.png" width="200" height="auto" alt="Keepr Logo" class="logo-dark">
-
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="frontend/img/logo-invert.png">
+  <img src="frontend/img/logo.png" width="200" height="auto" alt="Keepr Logo">
+</picture>
 
 # Keepr - Система мониторинга ИТ-активов
 
@@ -92,21 +93,3 @@ docker-compose up -d
 
 
 
-
-
-
-
-
-
-
-
-
-
-<style>
-.logo-light { display: block; }
-.logo-dark { display: none; }
-@media (prefers-color-scheme: dark) {
-    .logo-light { display: none; }
-    .logo-dark { display: block; }
-}
-</style>
