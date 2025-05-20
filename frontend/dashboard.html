@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IT Assets Dashboard</title>
+  <style>
+    table, th, td { border: 1px solid #333; border-collapse: collapse; padding: 4px; }
+    th { background: #ddd; }
+    .down { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>IT Asset Management Dashboard</h2>
+  <button id="logoutBtn">Logout</button>
+  <h3>All Assets</h3>
+  <table id="assetsTable">
+    <thead>
+      <tr>
+        <th>Name</th><th>Type</th><th>Project</th><th>Location</th><th>Status</th><th>Identifier</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- assets will be populated here -->
+    </tbody>
+  </table>
+  <h3>Add New Device</h3>
+  <form id="deviceForm">
+    <label>Name: <input type="text" name="name" required></label><br/>
+    <label>IP Address: <input type="text" name="ip_address" required></label><br/>
+    <label>Serial Number: <input type="text" name="serial_num"></label><br/>
+    <label>Model: <input type="text" name="model"></label><br/>
+    <button type="submit">Add Device</button>
+    <p id="deviceError" style="color:red;"></p>
+  </form>
+  <h3>Add New License</h3>
+  <form id="licenseForm">
+    <label>Name: <input type="text" name="name" required></label><br/>
+    <label>License Key: <input type="text" name="license_key" required></label><br/>
+    <label>Vendor: <input type="text" name="vendor"></label><br/>
+    <label>Seat Count: <input type="number" name="seat_count"></label><br/>
+    <label>Expiry Date: <input type="date" name="expiry_date"></label><br/>
+    <button type="submit">Add License</button>
+    <p id="licenseError" style="color:red;"></p>
+  </form>
+  <h3>Add New Certificate</h3>
+  <form id="certForm">
+    <label>Name: <input type="text" name="name" required></label><br/>
+    <label>Domain/Host: <input type="text" name="domain_host" required></label><br/>
+    <label>Expiry Date: <input type="date" name="expiry_date" required></label><br/>
+    <button type="submit">Add Certificate</button>
+    <p id="certError" style="color:red;"></p>
+  </form>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
