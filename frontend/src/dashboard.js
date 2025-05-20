@@ -1,177 +1,342 @@
-const token = localStorage.getItem('authToken');
-if (!token) {
-  // Не авторизован, перенаправление на страницу входа
-  window.location.href = 'index.html';
-}
+// Элементы DOM
+const navLinks = document.querySelectorAll('.nav-links a');
+const actionButtons = document.querySelectorAll('.action-btn');
+const modals = document.querySelectorAll('.modal');
+const forms = document.querySelectorAll('form');
+const eventsList = document.querySelector('.events-list');
+const assetTables = document.querySelector('.asset-tables');
 
-// Обработчик кнопки выхода
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  localStorage.removeItem('authToken');
-  window.location.href = 'index.html';
+// Состояние
+let currentUser = null;
+let isAdmin = false;
+let authToken = localStorage.getItem('authToken');
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!authToken) {
+    window.location.href = '/index.html';
+    return;
+  }
+  setupEventListeners();
+  loadDashboardData();
 });
 
-// Загрузка и отображение всех активов в таблице
-async function loadAssets() {
-  try {
-    const resp = await fetch('/api/assets', {
-      headers: { 'Authorization': 'Bearer ' + token }
+// Вспомогательная функция для обработки неавторизованных ответов
+function handleUnauthorized() {
+  localStorage.removeItem('authToken');
+  window.location.href = '/index.html';
+}
+
+// Обработчики событий
+function setupEventListeners() {
+  // Навигация
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const section = e.target.getAttribute('href').substring(1);
+      navigateToSection(section);
     });
-    if (!resp.ok) {
-      console.error('Failed to load assets');
+  });
+
+  // Кнопки действий
+  actionButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.action;
+      showModal(action);
+    });
+  });
+
+  // Формы
+  forms.forEach(form => {
+    form.addEventListener('submit', handleFormSubmit);
+  });
+
+  // Выход
+  document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+}
+
+// Навигация
+function navigateToSection(section) {
+  // Обновление активного состояния
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === `#${section}`) {
+      link.classList.add('active');
+    }
+  });
+
+  // Показать/скрыть разделы
+  if (section === 'dashboard') {
+    assetTables.style.display = 'none';
+    document.querySelector('.dashboard-stats').style.display = 'grid';
+    document.querySelector('.quick-actions').style.display = 'block';
+    document.querySelector('.events-feed').style.display = 'block';
+  } else {
+    document.querySelector('.dashboard-stats').style.display = 'none';
+    document.querySelector('.quick-actions').style.display = 'none';
+    document.querySelector('.events-feed').style.display = 'none';
+    assetTables.style.display = 'block';
+    loadAssets(section);
+  }
+}
+
+// Обработка модальных окон
+function showModal(type) {
+  const modal = document.getElementById(`${type}Modal`);
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'none';
+    modal.querySelector('form').reset();
+  }
+}
+
+// Обработка форм
+async function handleFormSubmit(e) {
+  e.preventDefault();
+  const form = e.target;
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData.entries());
+  const type = form.id.replace('Form', '');
+
+  try {
+    const response = await fetch('/api/assets', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + authToken
+      },
+      body: JSON.stringify({
+        ...data,
+        asset_type: type.toUpperCase()
+      })
+    });
+
+    if (response.status === 401) {
+      handleUnauthorized();
       return;
     }
-    const assets = await resp.json();
-    const tbody = document.querySelector('#assetsTable tbody');
-    tbody.innerHTML = '';
-    for (const asset of assets) {
-      const tr = document.createElement('tr');
-      // Имя
-      const tdName = document.createElement('td');
-      tdName.textContent = asset.name;
-      // Тип
-      const tdType = document.createElement('td');
-      tdType.textContent = asset.asset_type;
-      // Название проекта
-      const tdProj = document.createElement('td');
-      tdProj.textContent = asset.project_name || '';
-      // Название местоположения
-      const tdLoc = document.createElement('td');
-      tdLoc.textContent = asset.location_name || '';
-      // Статус (интерпретация кода)
-      const tdStatus = document.createElement('td');
-      tdStatus.textContent = asset.status == 1 ? 'Active' : asset.status;
-      // Идентификатор (ключевая деталь в зависимости от типа)
-      const tdIdent = document.createElement('td');
-      if (asset.asset_type === 'DEVICE') {
-        const ip = asset.device && asset.device.ip_address ? asset.device.ip_address : '';
-        const online = asset.device && asset.device.online;
-        tdIdent.textContent = ip;
-        if (online === 0) {
-          tdIdent.textContent += ' [DOWN]';
-          tdIdent.classList.add('down');
-        }
-      } else if (asset.asset_type === 'CERTIFICATE') {
-        tdIdent.textContent = asset.certificate && asset.certificate.domain_host ? asset.certificate.domain_host : '';
-      } else if (asset.asset_type === 'LICENSE') {
-        tdIdent.textContent = asset.license && asset.license.vendor ? asset.license.vendor : '';
-      } else {
-        tdIdent.textContent = '';
-      }
-      tr.appendChild(tdName);
-      tr.appendChild(tdType);
-      tr.appendChild(tdProj);
-      tr.appendChild(tdLoc);
-      tr.appendChild(tdStatus);
-      tr.appendChild(tdIdent);
-      tbody.appendChild(tr);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Не удалось добавить элемент');
     }
-  } catch (err) {
-    console.error('Error loading assets:', err);
+
+    closeModal(`${type}Modal`);
+    loadDashboardData();
+    addEvent(`${type} успешно добавлен`, 'success');
+  } catch (error) {
+    const errorElement = form.querySelector('.error-message');
+    errorElement.textContent = error.message;
   }
 }
 
-// Обработчики форм для добавления активов
-document.getElementById('deviceForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const form = e.target;
-  const errorEl = document.getElementById('deviceError');
-  errorEl.textContent = '';
-  const payload = {
-    name: form.name.value,
-    asset_type: 'DEVICE',
-    ip_address: form.ip_address.value,
-    serial_num: form.serial_num.value,
-    model: form.model.value
-  };
+// Загрузка данных
+async function loadDashboardData() {
   try {
-    const resp = await fetch('/api/assets', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      },
-      body: JSON.stringify(payload)
+    // Загрузка активов для статистики
+    const assetsResponse = await fetch('/api/assets', {
+      headers: { 'Authorization': 'Bearer ' + authToken }
     });
-    if (!resp.ok) {
-      const data = await resp.json();
-      errorEl.textContent = data.message || 'Failed to add device';
-    } else {
-      form.reset();
-      loadAssets();
+    
+    if (assetsResponse.status === 401) {
+      handleUnauthorized();
+      return;
     }
-  } catch (err) {
-    console.error('Add device error:', err);
-    errorEl.textContent = 'Error adding device';
-  }
-});
+    
+    if (!assetsResponse.ok) {
+      throw new Error('Не удалось загрузить активы');
+    }
+    
+    const assets = await assetsResponse.json();
+    
+    // Расчет статистики из активов
+    const stats = {
+      equipment: assets.filter(a => a.asset_type === 'DEVICE').length,
+      licenses: assets.filter(a => a.asset_type === 'LICENSE').length,
+      certificates: assets.filter(a => a.asset_type === 'CERTIFICATE').length,
+      alerts: assets.filter(a => a.status !== 'ACTIVE').length
+    };
 
-document.getElementById('licenseForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const form = e.target;
-  const errorEl = document.getElementById('licenseError');
-  errorEl.textContent = '';
-  const payload = {
-    name: form.name.value,
-    asset_type: 'LICENSE',
-    license_key: form.license_key.value,
-    vendor: form.vendor.value,
-    seat_count: form.seat_count.value ? parseInt(form.seat_count.value) : null,
-    expiry_date: form.expiry_date.value || null
-  };
+    // Загрузка уведомлений для событий
+    const notificationsResponse = await fetch('/api/notifications', {
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    });
+    
+    if (notificationsResponse.status === 401) {
+      handleUnauthorized();
+      return;
+    }
+    
+    if (!notificationsResponse.ok) {
+      throw new Error('Не удалось загрузить уведомления');
+    }
+    
+    const notifications = await notificationsResponse.json();
+
+    updateStats(stats);
+    updateEvents(notifications);
+  } catch (error) {
+    console.error('Не удалось загрузить данные панели управления:', error);
+    // Не перенаправлять при ошибке загрузки данных, просто показать ошибку в интерфейсе
+    addEvent('Не удалось загрузить данные панели управления: ' + error.message, 'error');
+  }
+}
+
+async function loadAssets(type) {
   try {
-    const resp = await fetch('/api/assets', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      },
-      body: JSON.stringify(payload)
+    const response = await fetch('/api/assets', {
+      headers: { 'Authorization': 'Bearer ' + authToken }
     });
-    if (!resp.ok) {
-      const data = await resp.json();
-      errorEl.textContent = data.message || 'Failed to add license';
-    } else {
-      form.reset();
-      loadAssets();
+    
+    if (response.status === 401) {
+      handleUnauthorized();
+      return;
     }
-  } catch (err) {
-    console.error('Add license error:', err);
-    errorEl.textContent = 'Error adding license';
+    
+    if (!response.ok) {
+      throw new Error('Не удалось загрузить активы');
+    }
+    
+    const assets = await response.json();
+    const filteredAssets = assets.filter(asset => {
+      const assetType = asset.asset_type.toLowerCase();
+      return type === 'equipment' ? assetType === 'device' :
+             type === 'licenses' ? assetType === 'license' :
+             type === 'certificates' ? assetType === 'certificate' : false;
+    });
+    
+    const tbody = document.querySelector('#assetsTable tbody');
+    tbody.innerHTML = filteredAssets.map(asset => `
+      <tr>
+        <td>${asset.name}</td>
+        <td>${asset.asset_type}</td>
+        <td>${asset.project_name || '-'}</td>
+        <td>${asset.location_name || '-'}</td>
+        <td>${asset.status}</td>
+        <td>${getAssetIdentifier(asset)}</td>
+        <td>
+          <button onclick="editAsset('${asset.id}')" class="btn-secondary">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button onclick="deleteAsset('${asset.id}')" class="btn-secondary">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    console.error(`Не удалось загрузить ${type}:`, error);
+    addEvent(`Не удалось загрузить ${type}: ${error.message}`, 'error');
   }
-});
+}
 
-document.getElementById('certForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const form = e.target;
-  const errorEl = document.getElementById('certError');
-  errorEl.textContent = '';
-  const payload = {
-    name: form.name.value,
-    asset_type: 'CERTIFICATE',
-    domain_host: form.domain_host.value,
-    expiry_date: form.expiry_date.value
+function getAssetIdentifier(asset) {
+  switch (asset.asset_type) {
+    case 'DEVICE':
+      return asset.device?.ip_address || '-';
+    case 'LICENSE':
+      return asset.license?.vendor || '-';
+    case 'CERTIFICATE':
+      return asset.certificate?.domain_host || '-';
+    default:
+      return '-';
+  }
+}
+
+// Обновление интерфейса
+function updateStats(stats) {
+  document.querySelector('.stat-card:nth-child(1) .stat-number').textContent = stats.equipment;
+  document.querySelector('.stat-card:nth-child(2) .stat-number').textContent = stats.licenses;
+  document.querySelector('.stat-card:nth-child(3) .stat-number').textContent = stats.certificates;
+  document.querySelector('.stat-card:nth-child(4) .stat-number').textContent = stats.alerts;
+}
+
+function updateEvents(notifications) {
+  eventsList.innerHTML = notifications.map(notification => `
+    <div class="event-item ${notification.type.toLowerCase()}">
+      <i class="fas ${getEventIcon(notification.type)}"></i>
+      <div class="event-content">
+        <p class="event-message">${notification.message}</p>
+        <p class="event-time">${new Date(notification.created_at).toLocaleString()}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addEvent(message, type = 'info') {
+  const eventElement = document.createElement('div');
+  eventElement.className = `event-item ${type}`;
+  eventElement.innerHTML = `
+    <i class="fas ${getEventIcon(type)}"></i>
+    <div class="event-content">
+      <p class="event-message">${message}</p>
+      <p class="event-time">${new Date().toLocaleString()}</p>
+    </div>
+  `;
+  
+  eventsList.insertBefore(eventElement, eventsList.firstChild);
+}
+
+function getEventIcon(type) {
+  const icons = {
+    info: 'fa-info-circle',
+    warning: 'fa-exclamation-triangle',
+    error: 'fa-times-circle',
+    success: 'fa-check-circle'
   };
-  try {
-    const resp = await fetch('/api/assets', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      },
-      body: JSON.stringify(payload)
-    });
-    if (!resp.ok) {
-      const data = await resp.json();
-      errorEl.textContent = data.message || 'Failed to add certificate';
-    } else {
-      form.reset();
-      loadAssets();
-    }
-  } catch (err) {
-    console.error('Add cert error:', err);
-    errorEl.textContent = 'Error adding certificate';
-  }
-});
+  return icons[type.toLowerCase()] || icons.info;
+}
 
-// Начальная загрузка
-loadAssets();
+// Управление активами
+async function editAsset(id) {
+  // TODO: Реализовать функционал редактирования
+  console.log('Редактирование актива:', id);
+}
+
+async function deleteAsset(id) {
+  if (!confirm('Вы уверены, что хотите удалить этот элемент?')) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/assets/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    });
+
+    if (response.status === 401) {
+      handleUnauthorized();
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error('Не удалось удалить элемент');
+    }
+
+    loadDashboardData();
+    addEvent('Элемент успешно удален', 'success');
+  } catch (error) {
+    console.error('Не удалось удалить элемент:', error);
+    addEvent('Не удалось удалить элемент: ' + error.message, 'error');
+  }
+}
+
+// Выход
+async function handleLogout() {
+  try {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    });
+    localStorage.removeItem('authToken');
+    window.location.href = '/index.html';
+  } catch (error) {
+    console.error('Ошибка при выходе:', error);
+  }
+}

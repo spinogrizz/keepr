@@ -1,54 +1,192 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Keepr</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔐 Keepr</title>
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/dashboard.css">
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-  <h2>Keepr Dashboard</h2>
-  <button id="logoutBtn">Logout</button>
-  <h3>All Assets</h3>
-  <table id="assetsTable">
-    <thead>
-      <tr>
-        <th>Name</th><th>Type</th><th>Project</th><th>Location</th><th>Status</th><th>Identifier</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- assets will be populated here -->
-    </tbody>
-  </table>
-  <h3>Add New Device</h3>
-  <form id="deviceForm">
-    <label>Name: <input type="text" name="name" required></label><br/>
-    <label>IP Address: <input type="text" name="ip_address" required></label><br/>
-    <label>Serial Number: <input type="text" name="serial_num"></label><br/>
-    <label>Model: <input type="text" name="model"></label><br/>
-    <button type="submit">Add Device</button>
-    <p id="deviceError" style="color:red;"></p>
-  </form>
-  <h3>Add New License</h3>
-  <form id="licenseForm">
-    <label>Name: <input type="text" name="name" required></label><br/>
-    <label>License Key: <input type="text" name="license_key" required></label><br/>
-    <label>Vendor: <input type="text" name="vendor"></label><br/>
-    <label>Seat Count: <input type="number" name="seat_count"></label><br/>
-    <label>Expiry Date: <input type="date" name="expiry_date"></label><br/>
-    <button type="submit">Add License</button>
-    <p id="licenseError" style="color:red;"></p>
-  </form>
-  <h3>Add New Certificate</h3>
-  <form id="certForm">
-    <label>Name: <input type="text" name="name" required></label><br/>
-    <label>Domain/Host: <input type="text" name="domain_host" required></label><br/>
-    <label>Expiry Date: <input type="date" name="expiry_date" required></label><br/>
-    <button type="submit">Add Certificate</button>
-    <p id="certError" style="color:red;"></p>
-  </form>
+  <!-- Фиксированная навигация -->
+  <nav class="main-nav">
+    <div class="nav-brand">Keepr</div>
+    <div class="nav-links">
+      <a href="#" class="active"><i class="fas fa-home"></i> Панель управления</a>
+      <a href="#"><i class="fas fa-desktop"></i> Оборудование</a>
+      <a href="#"><i class="fas fa-key"></i> Лицензии ПО</a>
+      <a href="#"><i class="fas fa-certificate"></i> SSL-сертификаты</a>
+      <div class="nav-divider"></div>
+      <a href="#" class="admin-only"><i class="fas fa-users"></i> Пользователи</a>
+      <a href="#" class="admin-only"><i class="fas fa-cog"></i> Настройки</a>
+    </div>
+    <div class="nav-user">
+      <span class="user-name">Иван Иванов</span>
+      <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Выход</button>
+    </div>
+  </nav>
+
+  <!-- Основной контент -->
+  <main class="dashboard-content">
+    <!-- Статистика панели управления -->
+    <section class="dashboard-stats">
+      <div class="stat-card">
+        <i class="fas fa-desktop"></i>
+        <div class="stat-info">
+          <h3>Оборудование</h3>
+          <p class="stat-number">24</p>
+          <p class="stat-label">Всего устройств</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-key"></i>
+        <div class="stat-info">
+          <h3>Лицензии</h3>
+          <p class="stat-number">12</p>
+          <p class="stat-label">Активные лицензии</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-certificate"></i>
+        <div class="stat-info">
+          <h3>Сертификаты</h3>
+          <p class="stat-number">8</p>
+          <p class="stat-label">Действующие сертификаты</p>
+        </div>
+      </div>
+      <div class="stat-card warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div class="stat-info">
+          <h3>Оповещения</h3>
+          <p class="stat-number">3</p>
+          <p class="stat-label">Требуют внимания</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Быстрые действия -->
+    <section class="quick-actions">
+      <h2>Быстрые действия</h2>
+      <div class="action-buttons">
+        <button class="action-btn" data-action="add-device">
+          <i class="fas fa-plus"></i> Добавить устройство
+        </button>
+        <button class="action-btn" data-action="add-license">
+          <i class="fas fa-plus"></i> Добавить лицензию
+        </button>
+        <button class="action-btn" data-action="add-certificate">
+          <i class="fas fa-plus"></i> Добавить сертификат
+        </button>
+      </div>
+    </section>
+
+    <!-- Лента последних событий -->
+    <section class="events-feed">
+      <h2>Последние события</h2>
+      <div class="events-list">
+        <!-- События будут добавлены динамически -->
+      </div>
+    </section>
+
+    <!-- Таблицы активов (скрыты по умолчанию, показываются при клике на пункты меню) -->
+    <section class="asset-tables" style="display: none;">
+      <div class="table-container">
+        <table id="assetsTable">
+          <thead>
+            <tr>
+              <th>Название</th>
+              <th>Тип</th>
+              <th>Проект</th>
+              <th>Расположение</th>
+              <th>Статус</th>
+              <th>Идентификатор</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- активы будут добавлены здесь -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Формы (скрыты по умолчанию, показываются при клике на кнопки действий) -->
+    <div class="modal" id="deviceModal" style="display: none;">
+      <div class="modal-content">
+        <h3>Добавить новое устройство</h3>
+        <form id="deviceForm">
+          <div class="form-group">
+            <label>Название: <input type="text" name="name" required></label>
+          </div>
+          <div class="form-group">
+            <label>IP-адрес: <input type="text" name="ip_address" required></label>
+          </div>
+          <div class="form-group">
+            <label>Серийный номер: <input type="text" name="serial_num"></label>
+          </div>
+          <div class="form-group">
+            <label>Модель: <input type="text" name="model"></label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Добавить устройство</button>
+            <button type="button" class="btn-secondary" onclick="closeModal('deviceModal')">Отмена</button>
+          </div>
+          <p id="deviceError" class="error-message"></p>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" id="licenseModal" style="display: none;">
+      <div class="modal-content">
+        <h3>Добавить новую лицензию</h3>
+        <form id="licenseForm">
+          <div class="form-group">
+            <label>Название: <input type="text" name="name" required></label>
+          </div>
+          <div class="form-group">
+            <label>Ключ лицензии: <input type="text" name="license_key" required></label>
+          </div>
+          <div class="form-group">
+            <label>Производитель: <input type="text" name="vendor"></label>
+          </div>
+          <div class="form-group">
+            <label>Количество мест: <input type="number" name="seat_count"></label>
+          </div>
+          <div class="form-group">
+            <label>Дата окончания: <input type="date" name="expiry_date"></label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Добавить лицензию</button>
+            <button type="button" class="btn-secondary" onclick="closeModal('licenseModal')">Отмена</button>
+          </div>
+          <p id="licenseError" class="error-message"></p>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" id="certModal" style="display: none;">
+      <div class="modal-content">
+        <h3>Добавить новый сертификат</h3>
+        <form id="certForm">
+          <div class="form-group">
+            <label>Название: <input type="text" name="name" required></label>
+          </div>
+          <div class="form-group">
+            <label>Домен/Хост: <input type="text" name="domain_host" required></label>
+          </div>
+          <div class="form-group">
+            <label>Дата окончания: <input type="date" name="expiry_date" required></label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Добавить сертификат</button>
+            <button type="button" class="btn-secondary" onclick="closeModal('certModal')">Отмена</button>
+          </div>
+          <p id="certError" class="error-message"></p>
+        </form>
+      </div>
+    </div>
+  </main>
 
   <script src="src/dashboard.js"></script>
 </body>
