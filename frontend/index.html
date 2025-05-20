@@ -2,19 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>IT Asset Management - Login</title>
+  <title>Вход в Keepr</title>
+
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/login.css">
+
 </head>
 <body>
-  <h2>Login</h2>
-  <form id="loginForm">
-    <label for="username">Username:</label>
-    <input type="text" id="username" required /><br/>
-    <label for="password">Password:</label>
-    <input type="password" id="password" required /><br/>
-    <button type="submit">Login</button>
-  </form>
-  <p id="loginError" style="color:red;"></p>
+  <img src="img/logo.png" alt="Logo" class="logo">
+  <div class="login-container">
+    <h2>Вход в систему</h2>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">Имя пользователя</label>
+        <input type="text" id="username" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Пароль</label>
+        <input type="password" id="password" required />
+      </div>
+      <button type="submit">Войти</button>
+      <p id="loginError"></p>
+    </form>
+  </div>
+  <div class="admin-contact">
+    Возникли проблемы? Пишите: <a href="https://t.me/spinogrizz" target="_blank">t.me/spinogrizz</a>
+  </div>
 
-  <script src="login.js"></script>
+  <script src="src/login.js"></script>
+
 </body>
 </html>

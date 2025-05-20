@@ -7,9 +7,12 @@ const ping = require('ping');
 
 // Проверка истекающих активов (сертификаты, лицензии и т.д.)
 async function checkExpirations() {
+  console.log('[Monitoring] Starting expiration check...');
   try {
     const today = new Date();
     const assets = await db.allAsync("SELECT id, name, asset_type, responsible, expiry_date FROM assets WHERE expiry_date IS NOT NULL");
+    console.log(`[Monitoring] Found ${assets.length} assets with expiry dates to check`);
+    
     for (const asset of assets) {
       if (!asset.expiry_date) continue;
       const expDate = new Date(asset.expiry_date);
@@ -17,6 +20,7 @@ async function checkExpirations() {
       const diffTime = expDate.getTime() - today.getTime();
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       if (diffDays <= config.EXPIRE_WARNING_DAYS) {
+        console.log(`[Monitoring] Asset "${asset.name}" (${asset.asset_type}) is ${diffDays < 0 ? 'expired' : `expiring in ${diffDays} days`}`);
         let message;
         let actionType;
         if (diffDays < 0) {
@@ -45,27 +49,33 @@ async function checkExpirations() {
         notifications.sendTelegram(message);
       }
     }
+    console.log('[Monitoring] Expiration check completed');
   } catch (err) {
-    console.error("Error in checkExpirations:", err);
+    console.error("[Monitoring] Error in checkExpirations:", err);
   }
 }
 
 // Проверка доступности устройств (пинг устройств)
 async function checkDevices() {
+  console.log('[Monitoring] Starting device availability check...');
   try {
     const devices = await db.allAsync(`
       SELECT d.id as device_id, d.asset_id, d.ip_address, d.online, a.name, a.responsible 
       FROM devices d 
       JOIN assets a ON a.id = d.asset_id
     `);
+    console.log(`[Monitoring] Found ${devices.length} devices to check`);
+    
     for (const d of devices) {
       if (!d.ip_address) continue;
+      console.log(`[Monitoring] Checking device "${d.name}" (${d.ip_address})...`);
       let isAlive = false;
       try {
         const res = await ping.promise.probe(d.ip_address, { timeout: 5 });
         isAlive = res.alive;
+        console.log(`[Monitoring] Device "${d.name}" is ${isAlive ? 'online' : 'offline'}`);
       } catch (pingErr) {
-        console.error(`Ping error for ${d.ip_address}:`, pingErr);
+        console.error(`[Monitoring] Ping error for ${d.ip_address}:`, pingErr);
         isAlive = false;
       }
       const wasOnline = (d.online === 1 || d.online === null);
@@ -107,8 +117,9 @@ async function checkDevices() {
         // Если уже было недоступно, ничего не делаем (избегаем спама повторных предупреждений)
       }
     }
+    console.log('[Monitoring] Device availability check completed');
   } catch (err) {
-    console.error("Error in checkDevices:", err);
+    console.error("[Monitoring] Error in checkDevices:", err);
   }
 }
 

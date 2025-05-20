@@ -51,9 +51,10 @@ app.use('/api/audit', authenticateToken,
 );
 
 // статические файлы фронтенда
-app.use(express.static('../frontend'));
+app.use(express.static('./frontend'));
 
 // запуск
 app.listen(config.PORT, () => {
   console.log(`Server listening on http://localhost:${config.PORT}`);
 });
+

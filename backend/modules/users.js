@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
   if (!username || !password || !role) {
     return res.status(400).json({ message: 'username, password and role are required' });
   }
-  const allowedRoles = ['admin', 'editor', 'viewer'];
+  const allowedRoles = ['admin'];
   if (!allowedRoles.includes(role)) {
     return res.status(400).json({ message: 'Invalid role' });
   }
