@@ -1,4 +1,6 @@
-# <img src="frontend/img/logo.png" width="200" height="auto" style="background-color: #fff;" alt="Keepr Logo"> 
+<img src="frontend/img/logo.png" width="200" height="auto" alt="Keepr Logo" class="logo-light">
+<img src="frontend/img/logo-invert.png" width="200" height="auto" alt="Keepr Logo" class="logo-dark">
+
 
 # Keepr - Система мониторинга ИТ-активов
 
@@ -84,3 +86,27 @@ docker-compose up -d
 
 Вообще это дипломный проект для МТИ, но если вам ВДРУГ это пригодилось, присылайте merge requests :-D
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>
+.logo-light { display: block; }
+.logo-dark { display: none; }
+@media (prefers-color-scheme: dark) {
+    .logo-light { display: none; }
+    .logo-dark { display: block; }
+}
+</style>
