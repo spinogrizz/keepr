@@ -1,4 +1,4 @@
-# <img src="frontend/img/logo.png" width="200" height="auto" alt="Keepr Logo"> 
+# <img src="frontend/img/logo.png" width="200" height="auto" style="background-color: #fff;" alt="Keepr Logo"> 
 
 # Keepr - Система мониторинга ИТ-активов
 
