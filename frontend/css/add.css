@@ -1,4 +1,6 @@
-/* Стили для страницы добавления актива */
+/* ===== СТИЛИ СТРАНИЦЫ ДОБАВЛЕНИЯ АКТИВОВ ===== */
+
+/* Основной контент страницы добавления */
 .add-content {
   padding: 2rem;
   max-width: 800px;
@@ -6,6 +8,7 @@
   margin-top: 100px;
 }
 
+/* ===== ПЕРЕКЛЮЧАТЕЛЬ ФОРМ ===== */
 .form-switcher {
   display: flex;
   gap: 1rem;
@@ -37,11 +40,12 @@
   margin-right: 0.5rem;
 }
 
+/* ===== ФОРМЫ АКТИВОВ ===== */
 .asset-form {
   display: none;
-  background: var(--bg-color);
+  background: #fff;
   padding: 2rem;
-  border-radius: var(--border-radius);
+  border-radius: 8px;
   box-shadow: var(--shadow);
 }
 
@@ -51,83 +55,5 @@
 
 .asset-form h2 {
   margin-bottom: 1.5rem;
-  color: var(--text-color);
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: var(--text-color);
-}
-
-.form-group input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background: var(--bg-color);
-  color: var(--text-color);
-}
-
-.form-group select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background: var(--bg-color);
-  color: var(--text-color);
-  cursor: pointer;
-}
-
-.form-group select:focus {
-  outline: none;
-  border-color: var(--primary-color);
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.btn-primary {
-  background-color: var(--primary-color);
-  color: #fff;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-  background-color: #2980b9;
-}
-
-.btn-secondary {
-  background-color: #f0f2f5;
-  color: #666;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-  background-color: #e4e6e9;
-}
-
-.error-message {
-  color: var(--error-color);
-  margin-top: 1rem;
-  display: none;
-}
-
-.error-message:not(:empty) {
-  display: block;
+  color: var(--secondary-color);
 } 

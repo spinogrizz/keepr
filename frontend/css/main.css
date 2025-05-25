@@ -1,10 +1,11 @@
-/* Reset and Base Styles */
+/* ===== СБРОС И БАЗОВЫЕ СТИЛИ ===== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ===== CSS ПЕРЕМЕННЫЕ ===== */
 :root {
   --primary-color: #3498db;
   --secondary-color: #2c3e50;
@@ -12,19 +13,25 @@
   --text-color: #333;
   --border-color: #ddd;
   --error-color: #e74c3c;
+  --success-color: #28a745;
+  --warning-color: #ffc107;
   --border-radius: 4px;
   --shadow: 0 2px 4px rgba(0,0,0,0.05);
   --hover-color: #f0f2f5;
 }
 
+/* ===== БАЗОВЫЕ СТИЛИ BODY ===== */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   line-height: 1.6;
   color: var(--text-color);
-  background-color: var(--bg-color);
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
 }
 
-/* Navigation */
+/* ===== НАВИГАЦИЯ ===== */
 .main-nav {
   position: fixed;
   top: 0;
@@ -107,7 +114,7 @@ body {
   color: var(--error-color);
 }
 
-/* Common Components */
+/* ===== ОБЩИЕ КНОПКИ ===== */
 .btn-primary {
   background-color: var(--primary-color);
   color: #fff;
@@ -116,6 +123,7 @@ body {
   border-radius: var(--border-radius);
   cursor: pointer;
   transition: all 0.3s ease;
+  font-size: 14px;
 }
 
 .btn-primary:hover {
@@ -130,13 +138,161 @@ body {
   border-radius: var(--border-radius);
   cursor: pointer;
   transition: all 0.3s ease;
+  font-size: 14px;
 }
 
 .btn-secondary:hover {
   background-color: #e4e6e9;
 }
 
-/* Responsive Design */
+/* ===== ОБЩИЕ ФОРМЫ ===== */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: #fff;
+  color: var(--text-color);
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+/* ===== СООБЩЕНИЯ ОБ ОШИБКАХ ===== */
+.error-message {
+  color: var(--error-color);
+  margin-top: 1rem;
+  font-size: 14px;
+  display: none;
+}
+
+.error-message:not(:empty) {
+  display: block;
+}
+
+/* ===== ТАБЛИЦЫ ===== */
+.table-container {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+th, td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: var(--secondary-color);
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+
+th:hover {
+  background-color: #e9ecef;
+}
+
+th.sortable::after {
+  content: ' ↕';
+  color: #ccc;
+  font-size: 0.8em;
+}
+
+th.sort-asc::after {
+  content: ' ↑';
+  color: var(--primary-color);
+}
+
+th.sort-desc::after {
+  content: ' ↓';
+  color: var(--primary-color);
+}
+
+tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* ===== ДОПОЛНИТЕЛЬНЫЕ ЭЛЕМЕНТЫ ===== */
+
+/* Бейджи статуса (создаются динамически в JS) */
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+}
+
+/* События и уведомления (создаются динамически в JS) */
+.event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s ease;
+}
+
+.event-item:hover {
+  background-color: #f8f9fa;
+}
+
+.event-content {
+  flex: 1;
+}
+
+.event-message {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-color);
+}
+
+.event-time {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+/* Скрытие элементов только для администраторов */
+.admin-only {
+  /* Стиль будет применен через JavaScript в зависимости от роли пользователя */
+}
+
+/* ===== АДАПТИВНЫЙ ДИЗАЙН ===== */
 @media (max-width: 768px) {
   .main-nav {
     padding: 0 1rem;
@@ -145,16 +301,14 @@ body {
   .nav-links {
     display: none;
   }
-}
 
-body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    display: flex;
+  .form-actions {
     flex-direction: column;
-    align-items: center;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .form-actions .btn-primary,
+  .form-actions .btn-secondary {
+    width: 100%;
+  }
 }
 
