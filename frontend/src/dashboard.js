@@ -18,10 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadDashboardData();
 });
 
-// Вспомогательная функция для обработки неавторизованных ответов
-function handleUnauthorized() {
-  userManager.handleUnauthorized();
-}
+
 
 // Обработчики событий
 function setupEventListeners() {
@@ -53,18 +50,15 @@ function navigateToSection(section) {
   // Показать/скрыть разделы
   const dashboardStats = document.querySelector('.dashboard-stats');
   const quickActions = document.querySelector('.quick-actions');
-  // const eventsFeed = document.querySelector('.events-feed');
   const assetTables = document.querySelector('.asset-tables');
 
   if (section === 'dashboard') {
     dashboardStats.style.display = 'grid';
     quickActions.style.display = 'block';
-    // eventsFeed.style.display = 'block';
     assetTables.style.display = 'none';
   } else {
     dashboardStats.style.display = 'none';
     quickActions.style.display = 'none';
-    // eventsFeed.style.display = 'none';
     assetTables.style.display = 'block';
     loadAssets(section);
   }
@@ -74,22 +68,8 @@ function navigateToSection(section) {
 async function loadDashboardData() {
   try {
     // Загрузка активов для статистики
-    const assetsResponse = await fetch('/api/assets', {
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
+    const assets = await fetchData('/assets', authToken);
     
-    if (assetsResponse.status === 401) {
-      handleUnauthorized();
-      return;
-    }
-    
-    if (!assetsResponse.ok) {
-      throw new Error('Не удалось загрузить активы');
-    }
-    
-    const assets = await assetsResponse.json();
-    
-
     // Расчет статистики из активов
     const stats = {
       equipment: assets.filter(a => a.asset_type === 'DEVICE').length,
@@ -104,25 +84,11 @@ async function loadDashboardData() {
     updateStats(stats);
 
     // Загрузка уведомлений для событий
-    const notificationsResponse = await fetch('/api/notifications', {
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
-    
-    if (notificationsResponse.status === 401) {
-      handleUnauthorized();
-      return;
-    }
-    
-    if (!notificationsResponse.ok) {
-      throw new Error('Не удалось загрузить уведомления');
-    }
-    
-    const notifications = await notificationsResponse.json();
-
+    const notifications = await fetchData('/notifications', authToken);
     updateEvents(notifications);
   } catch (error) {
     console.error('Не удалось загрузить данные панели управления:', error);
-    addEvent('Не удалось загрузить данные панели управления: ' + error.message, 'error');
+    //addEvent('Не удалось загрузить данные панели управления: ' + error.message, 'error');
   }
 }
 
@@ -132,20 +98,7 @@ let currentSortDirection = 'asc';
 
 async function loadAssets(type) {
   try {
-    const response = await fetch('/api/assets', {
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
-    
-    if (response.status === 401) {
-      handleUnauthorized();
-      return;
-    }
-    
-    if (!response.ok) {
-      throw new Error('Не удалось загрузить активы');
-    }
-    
-    const assets = await response.json();
+    const assets = await fetchData('/assets', authToken);
     const filteredAssets = assets.filter(asset => {
       const assetType = asset.asset_type.toLowerCase();
       return type === 'equipment' ? assetType === 'device' :
@@ -227,46 +180,11 @@ function displayAssets(assets, type) {
   }).join('');
 }
 
-function getAssetIdentifier(asset) {
-  switch (asset.asset_type) {
-    case 'DEVICE':
-      return asset.device?.ip_address || '-';
-    case 'LICENSE':
-      return asset.license?.vendor || '-';
-    case 'CERTIFICATE':
-      return asset.certificate?.domain_host || '-';
-    default:
-      return '-';
-  }
-}
 
-function getStatusText(status) {
-  // Если status - число, используем STATUSES, иначе пытаемся найти по строке
-  if (typeof status === 'number') {
-    return STATUSES[status] ? STATUSES[status].label : status;
-  } else {
-    // Обратная совместимость для строковых статусов
-    const statusMap = {
-      'ACTIVE': 'Активный',
-      'INACTIVE': 'Неактивный',
-      'EXPIRED': 'Истёк',
-      'PENDING': 'Ожидает',
-      'MAINTENANCE': 'Обслуживание',
-      'DECOMMISSIONED': 'Списан'
-    };
-    return statusMap[status] || status;
-  }
-}
 
-function getStatusBadge(status) {
-  // Возвращает HTML для цветного бейджа статуса
-  if (typeof status === 'number' && STATUSES[status]) {
-    const statusInfo = STATUSES[status];
-    return `<span class="status-badge" style="background-color: ${statusInfo.color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">${statusInfo.label}</span>`;
-  } else {
-    return getStatusText(status);
-  }
-}
+
+
+
 
 // Функция сортировки таблицы
 function sortTable(columnIndex) {
@@ -326,6 +244,8 @@ function updateStats(stats) {
 }
 
 function updateEvents(notifications) {
+  if (!eventsList) return;
+  
   eventsList.innerHTML = notifications.map(notification => `
     <div class="event-item ${notification.type.toLowerCase()}">
       <i class="fas ${getEventIcon(notification.type)}"></i>
@@ -338,6 +258,8 @@ function updateEvents(notifications) {
 }
 
 function addEvent(message, type = 'info') {
+  if (!eventsList) return;
+  
   const eventElement = document.createElement('div');
   eventElement.className = `event-item ${type}`;
   eventElement.innerHTML = `
@@ -351,33 +273,12 @@ function addEvent(message, type = 'info') {
   eventsList.insertBefore(eventElement, eventsList.firstChild);
 }
 
-function getEventIcon(type) {
-  const icons = {
-    info: 'fa-info-circle',
-    warning: 'fa-exclamation-triangle',
-    error: 'fa-times-circle',
-    success: 'fa-check-circle'
-  };
-  return icons[type.toLowerCase()] || icons.info;
-}
+
 
 // Управление активами
 async function editAsset(id) {
   try {
-    const response = await fetch(`/api/assets/${id}`, {
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
-
-    if (response.status === 401) {
-      handleUnauthorized();
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error('Не удалось загрузить данные актива');
-    }
-
-    const asset = await response.json();
+    const asset = await fetchData(`/assets/${id}`, authToken);
     window.location.href = `add.html?type=${asset.asset_type.toLowerCase()}&id=${id}`;
   } catch (error) {
     console.error('Не удалось загрузить данные актива:', error);
@@ -391,19 +292,7 @@ async function deleteAsset(id) {
   }
 
   try {
-    const response = await fetch(`/api/assets/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
-
-    if (response.status === 401) {
-      handleUnauthorized();
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error('Не удалось удалить элемент');
-    }
+    await sendData(`/assets/${id}`, 'DELETE', {}, authToken);
 
     // Перезагружаем данные панели управления и текущую таблицу
     loadDashboardData();
@@ -424,16 +313,4 @@ async function deleteAsset(id) {
   }
 }
 
-// Выход
-async function handleLogout() {
-  try {
-    await fetch('/api/auth/logout', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
-    localStorage.removeItem('authToken');
-    window.location.href = '/index.html';
-  } catch (error) {
-    console.error('Ошибка при выходе:', error);
-  }
-}
+

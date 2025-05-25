@@ -1,6 +1,4 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  const API_BASE_URL = '/api'; // Assuming your API routes are prefixed with /api
-  
   // Инициализируем пользователя
   const initialized = await userManager.initialize();
   if (!initialized) {
@@ -16,14 +14,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const projectNameInput = document.getElementById('project-name');
   const cancelProjectEditBtn = document.getElementById('cancel-project-edit');
 
-  // DOM Elements for Locations (will be used later)
+  // DOM Elements for Locations
   const locationsList = document.getElementById('locations-list');
   const locationForm = document.getElementById('location-form');
   const locationIdInput = document.getElementById('location-id');
   const locationNameInput = document.getElementById('location-name');
   const cancelLocationEditBtn = document.getElementById('cancel-location-edit');
 
-  // DOM Elements for Users (will be used later)
+  // DOM Elements for Users
   const usersList = document.getElementById('users-list');
   const userForm = document.getElementById('user-form');
   const userIdInput = document.getElementById('user-id');
@@ -34,61 +32,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const userRoleInput = document.getElementById('user-role');
   const cancelUserEditBtn = document.getElementById('cancel-user-edit');
 
-  // --- Helper Functions ---
-  // Вспомогательная функция для обработки неавторизованных ответов
-  function handleUnauthorized() {
-    userManager.handleUnauthorized();
-  }
 
-  async function fetchData(endpoint) {
-    try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: { 'Authorization': 'Bearer ' + authToken }
-      });
-      if (response.status === 401) {
-        handleUnauthorized();
-        return [];
-      }
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error(`Error fetching ${endpoint}:`, error);
-      alert(`Не удалось загрузить данные для ${endpoint}.`);
-      return [];
-    }
-  }
-
-  async function sendData(endpoint, method, data) {
-    try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + authToken
-        },
-        body: JSON.stringify(data),
-      });
-      if (response.status === 401) {
-        handleUnauthorized();
-        return null;
-      }
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error(`Error ${method}ing ${endpoint}:`, error);
-      alert(`Ошибка: ${error.message}`);
-      return null;
-    }
-  }
 
   // --- Projects --- 
   async function loadProjects() {
-    const projects = await fetchData('/projects');
+    const projects = await fetchData('/projects', authToken);
     projectsList.innerHTML = ''; // Clear existing list
     projects.forEach(project => {
       const listItem = document.createElement('div');
@@ -118,9 +66,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const payload = { name };
     let result;
     if (id) { // Update existing project
-      result = await sendData(`/projects/${id}`, 'PUT', payload); 
+      result = await sendData(`/projects/${id}`, 'PUT', payload, authToken); 
     } else { // Create new project
-      result = await sendData('/projects', 'POST', payload);
+      result = await sendData('/projects', 'POST', payload, authToken);
     }
 
     if (result) {
@@ -146,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (target.classList.contains('delete-btn')) {
       if (confirm('Вы уверены, что хотите удалить этот проект? Это действие не может быть отменено.')) {
-        const result = await sendData(`/projects/${projectId}`, 'DELETE', {});
+        const result = await sendData(`/projects/${projectId}`, 'DELETE', {}, authToken);
         if (result !== null) { // Check if delete was successful (sendData returns null on error, empty object on success for DELETE)
           loadProjects();
           alert('Проект успешно удален!');
@@ -167,22 +115,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     cancelProjectEditBtn.style.display = 'none';
   }
   
-  function escapeHTML(str) {
-    return str.replace(/[&<>'"/]/g, function (match) {
-        return {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;',
-            '/': '&#x2F;'
-        }[match];
-    });
-  }
 
-  // --- Locations (Placeholder - to be implemented) ---
+
+  // --- Locations ---
   async function loadLocations() {
-    const locations = await fetchData('/locations');
+    const locations = await fetchData('/locations', authToken);
     locationsList.innerHTML = ''; // Clear existing list
     locations.forEach(location => {
       const listItem = document.createElement('div');
@@ -212,9 +149,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const payload = { name };
     let result;
     if (id) { // Update existing location
-      result = await sendData(`/locations/${id}`, 'PUT', payload);
+      result = await sendData(`/locations/${id}`, 'PUT', payload, authToken);
     } else { // Create new location
-      result = await sendData('/locations', 'POST', payload);
+      result = await sendData('/locations', 'POST', payload, authToken);
     }
 
     if (result) {
@@ -240,7 +177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (target.classList.contains('delete-btn')) {
       if (confirm('Вы уверены, что хотите удалить это местоположение? Это действие не может быть отменено.')) {
-        const result = await sendData(`/locations/${locationId}`, 'DELETE', {});
+        const result = await sendData(`/locations/${locationId}`, 'DELETE', {}, authToken);
         if (result !== null) {
           loadLocations();
           alert('Местоположение успешно удалено!');
@@ -261,9 +198,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     cancelLocationEditBtn.style.display = 'none';
   }
 
-  // --- Users (Placeholder - to be implemented) ---
+  // --- Users ---
   async function loadUsers() {
-    const users = await fetchData('/users');
+    const users = await fetchData('/users', authToken);
     usersList.innerHTML = ''; // Clear existing list
     users.forEach(user => {
       const listItem = document.createElement('div');
@@ -316,9 +253,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let result;
     if (id) { // Update existing user
-      result = await sendData(`/users/${id}`, 'PUT', payload);
+      result = await sendData(`/users/${id}`, 'PUT', payload, authToken);
     } else { // Create new user
-      result = await sendData('/users', 'POST', payload);
+      result = await sendData('/users', 'POST', payload, authToken);
     }
 
     if (result) {
@@ -352,7 +289,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // It might be dangerous to allow deletion of users directly, 
       // especially the last admin. Consider adding checks or a soft delete.
       if (confirm('Вы уверены, что хотите удалить этого пользователя? Это действие не может быть отменено.')) {
-        const result = await sendData(`/users/${userId}`, 'DELETE', {});
+        const result = await sendData(`/users/${userId}`, 'DELETE', {}, authToken);
         if (result !== null) {
           loadUsers();
           alert('Пользователь успешно удален!');
@@ -380,21 +317,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initial data load
   loadProjects();
-  loadLocations(); // Will be implemented
-  loadUsers();     // Will be implemented
+  loadLocations();
+  loadUsers();
 
-  // Обработчик выхода
-  document.getElementById('logoutBtn').addEventListener('click', async () => {
-    try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + authToken }
-      });
-    } catch (error) {
-      console.error('Ошибка при выходе:', error);
-    } finally {
-      localStorage.removeItem('authToken');
-      window.location.href = '/index.html';
-    }
-  });
+
 }); 

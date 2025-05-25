@@ -44,27 +44,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadProjectsAndLocations() {
   try {
     // Загружаем проекты
-    const projectsResponse = await fetch('/api/projects', {
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
-
-    if (projectsResponse.status === 401) {
-      handleUnauthorized();
-      return;
-    }
-
-    if (projectsResponse.ok) {
-      projects = await projectsResponse.json();
-    }
+    projects = await fetchData('/projects', authToken);
 
     // Загружаем локации
-    const locationsResponse = await fetch('/api/locations', {
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
-
-    if (locationsResponse.ok) {
-      locations = await locationsResponse.json();
-    }
+    locations = await fetchData('/locations', authToken);
 
     // Заполняем select'ы
     populateSelects();
@@ -73,31 +56,7 @@ async function loadProjectsAndLocations() {
   }
 }
 
-// Заполнение select'ов статусов
-function populateStatusSelects() {
-  const statusSelects = document.querySelectorAll('select[name="status"]');
-  
-  statusSelects.forEach(select => {
-    // Очищаем существующие опции
-    select.innerHTML = '';
-    
-    // Добавляем опции статусов
-    Object.keys(STATUSES).forEach(statusId => {
-      const status = STATUSES[statusId];
-      const option = document.createElement('option');
-      option.value = statusId;
-      option.textContent = status.label;
-      option.style.color = status.color;
-      
-      // По умолчанию выбираем "Активный"
-      if (parseInt(statusId) === STATUS.ACTIVE) {
-        option.selected = true;
-      }
-      
-      select.appendChild(option);
-    });
-  });
-}
+
 
 // Заполнение select'ов данными
 function populateSelects() {
@@ -138,20 +97,7 @@ function populateSelects() {
 // Загрузка данных актива
 async function loadAssetData(id) {
   try {
-    const response = await fetch(`/api/assets/${id}`, {
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
-
-    if (response.status === 401) {
-      handleUnauthorized();
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error('Не удалось загрузить данные актива');
-    }
-
-    const asset = await response.json();
+    const asset = await fetchData(`/assets/${id}`, authToken);
     
     // Заполняем форму данными
     const form = document.getElementById(`${asset.asset_type.toLowerCase()}Form`);
@@ -203,15 +149,7 @@ async function loadAssetData(id) {
   }
 }
 
-// Получение названия типа актива
-function getAssetTypeName(type) {
-  const types = {
-    'DEVICE': 'устройство',
-    'LICENSE': 'лицензию',
-    'CERTIFICATE': 'сертификат'
-  };
-  return types[type] || 'актив';
-}
+
 
 // Обработчики событий
 function setupEventListeners() {
@@ -228,8 +166,7 @@ function setupEventListeners() {
     form.addEventListener('submit', handleFormSubmit);
   });
 
-  // Выход
-  document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
 }
 
 // Переключение форм
@@ -274,30 +211,13 @@ async function handleFormSubmit(e) {
   }
 
   try {
-    const url = isEditing ? `/api/assets/${currentAssetId}` : '/api/assets';
+    const url = isEditing ? `/assets/${currentAssetId}` : '/assets';
     const method = isEditing ? 'PUT' : 'POST';
 
-    const response = await fetch(url, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + authToken
-      },
-      body: JSON.stringify({
-        ...data,
-        asset_type: type.toUpperCase()
-      })
-    });
-
-    if (response.status === 401) {
-      handleUnauthorized();
-      return;
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Не удалось сохранить элемент');
-    }
+    await sendData(url, method, {
+      ...data,
+      asset_type: type.toUpperCase()
+    }, authToken);
 
     // После успешного сохранения возвращаемся на дашборд
     window.location.href = 'dashboard.html';
@@ -307,21 +227,4 @@ async function handleFormSubmit(e) {
   }
 }
 
-// Вспомогательная функция для обработки неавторизованных ответов
-function handleUnauthorized() {
-  userManager.handleUnauthorized();
-}
-
-// Выход
-async function handleLogout() {
-  try {
-    await fetch('/api/auth/logout', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + authToken }
-    });
-    localStorage.removeItem('authToken');
-    window.location.href = '/index.html';
-  } catch (error) {
-    console.error('Ошибка при выходе:', error);
-  }
-} 
+ 

@@ -227,12 +227,6 @@ th:hover {
   background-color: #e9ecef;
 }
 
-th.sortable::after {
-  content: ' ↕';
-  color: #ccc;
-  font-size: 0.8em;
-}
-
 th.sort-asc::after {
   content: ' ↑';
   color: var(--primary-color);
