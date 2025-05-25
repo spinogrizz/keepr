@@ -2,36 +2,36 @@ const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('sqlite3');
 
-// Ensure data directory exists
+// Убедиться, что директория данных существует
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// Use file path from env or default in data directory
+// Использовать путь к файлу из переменной окружения или по умолчанию в директории данных
 const dbFilePath = process.env.DB_FILE || path.join(dataDir, 'database.sqlite');
 
-// Open SQLite database
+// Открыть SQLite базу данных
 const db = new sqlite3.Database(dbFilePath);
 
-// Initialize tables if not exist
+// Инициализировать таблицы, если они не существуют
 db.serialize(() => {
-  // Enable foreign keys enforcement
+  // Включить принудительное соблюдение внешних ключей
   db.run(`PRAGMA foreign_keys = ON`);
 
-  // Projects table
+  // Таблица проектов
   db.run(`CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL
   )`);
 
-  // Locations table
+  // Таблица местоположений
   db.run(`CREATE TABLE IF NOT EXISTS locations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL
   )`);
 
-  // Users table
+  // Таблица пользователей
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
@@ -41,7 +41,7 @@ db.serialize(() => {
     email TEXT
   )`);
 
-  // Assets table (central registry of IT assets)
+  // Таблица активов (центральный реестр IT активов)
   db.run(`CREATE TABLE IF NOT EXISTS assets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -57,7 +57,7 @@ db.serialize(() => {
     FOREIGN KEY(location_id) REFERENCES locations(id) ON DELETE SET NULL
   )`);
 
-  // Certificates table (details for SSL certificates)
+  // Таблица сертификатов (детали для SSL сертификатов)
   db.run(`CREATE TABLE IF NOT EXISTS certificates (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     asset_id INTEGER NOT NULL UNIQUE,
@@ -67,7 +67,7 @@ db.serialize(() => {
     FOREIGN KEY(asset_id) REFERENCES assets(id) ON DELETE CASCADE
   )`);
 
-  // Licenses table (details for software licenses)
+  // Таблица лицензий (детали для программных лицензий)
   db.run(`CREATE TABLE IF NOT EXISTS licenses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     asset_id INTEGER NOT NULL UNIQUE,
@@ -77,7 +77,7 @@ db.serialize(() => {
     FOREIGN KEY(asset_id) REFERENCES assets(id) ON DELETE CASCADE
   )`);
 
-  // Devices table (details for physical/network devices)
+  // Таблица устройств (детали для физических/сетевых устройств)
   db.run(`CREATE TABLE IF NOT EXISTS devices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     asset_id INTEGER NOT NULL UNIQUE,
@@ -89,7 +89,7 @@ db.serialize(() => {
     FOREIGN KEY(asset_id) REFERENCES assets(id) ON DELETE CASCADE
   )`);
 
-  // Audit log table (records all changes and events)
+  // Таблица журнала аудита (записывает все изменения и события)
   db.run(`CREATE TABLE IF NOT EXISTS audit_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     asset_id INTEGER,
@@ -104,7 +104,7 @@ db.serialize(() => {
   )`);
 });
 
-// Promisify the sqlite3 functions for convenience
+// Преобразовать функции sqlite3 в Promise для удобства
 const { promisify } = require('util');
 db.allAsync = promisify(db.all).bind(db);
 db.getAsync = promisify(db.get).bind(db);
@@ -112,7 +112,7 @@ db.runAsync = function(sql, params=[]) {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function(err) {
       if (err) reject(err);
-      else resolve(this); // 'this' holds lastID, changes, etc.
+      else resolve(this); 
     });
   });
 };

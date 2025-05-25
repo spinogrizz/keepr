@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔐 Keepr - Управление данными</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/other.css"> <!-- We'll create this later -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <!-- Фиксированная навигация -->
+  <nav class="main-nav">
+    <div class="nav-brand">Keepr</div>
+    <div class="nav-links">
+      <a href="dashboard.html"><i class="fas fa-arrow-left"></i> Назад</a>
+    </div>
+    <div class="nav-user">
+      <span class="user-name">user</span>
+      <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Выход</button>
+    </div>
+  </nav>
+
+  <!-- Основной контент -->
+  <main class="management-content">
+    <!-- Раздел Проекты -->
+    <section id="projects-section" class="management-section">
+      <h2>Проекты</h2>
+      <div class="item-list" id="projects-list">
+        <!-- Список проектов будет здесь -->
+      </div>
+      <form id="project-form" class="item-form">
+        <input type="hidden" id="project-id">
+        <input type="text" id="project-name" placeholder="Название проекта" required>
+        <button type="submit">Сохранить проект</button>
+        <button type="button" id="cancel-project-edit" style="display:none;">Отмена</button>
+      </form>
+    </section>
+
+    <!-- Раздел Местоположения -->
+    <section id="locations-section" class="management-section">
+      <h2>Местоположения</h2>
+      <div class="item-list" id="locations-list">
+        <!-- Список местоположений будет здесь -->
+      </div>
+      <form id="location-form" class="item-form">
+        <input type="hidden" id="location-id">
+        <input type="text" id="location-name" placeholder="Название местоположения" required>
+        <button type="submit">Сохранить местоположение</button>
+        <button type="button" id="cancel-location-edit" style="display:none;">Отмена</button>
+      </form>
+    </section>
+
+    <!-- Раздел Пользователи -->
+    <section id="users-section" class="management-section">
+      <h2>Пользователи</h2>
+      <div class="item-list" id="users-list">
+        <!-- Список пользователей будет здесь -->
+      </div>
+      <form id="user-form" class="item-form">
+        <input type="hidden" id="user-id">
+        <input type="text" id="user-username" placeholder="Имя пользователя" required>
+        <input type="password" id="user-password" placeholder="Пароль (оставьте пустым чтобы не менять)">
+        <input type="text" id="user-full-name" placeholder="Полное имя">
+        <input type="email" id="user-email" placeholder="Email">
+        <select id="user-role" required>
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button type="submit">Сохранить пользователя</button>
+        <button type="button" id="cancel-user-edit" style="display:none;">Отмена</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="src/other.js"></script> <!-- We'll create this later -->
+</body>
+</html> 

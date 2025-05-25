@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../db.js');
 const router = express.Router();
 
-// Get audit log (all entries)
+// Получить журнал аудита (все записи)
 router.get('/', async (req, res) => {
   try {
     const logs = await db.allAsync(`

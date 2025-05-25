@@ -4,25 +4,25 @@ const config = require('../config.js');
 
 async function initAdmin() {
   try {
-    // Check if admin already exists
+    // Проверить, существует ли администратор
     const existingAdmin = await db.getAsync("SELECT id FROM users WHERE username = 'admin'");
     if (existingAdmin) {
       console.log('Admin user already exists');
       process.exit(0);
     }
 
-    // Get admin password from environment
+    // Получить пароль администратора из переменной окружения
     const adminPassword = process.env.ADMIN_PASSWORD;
     if (!adminPassword) {
       console.error('ADMIN_PASSWORD environment variable is not set');
       process.exit(1);
     }
 
-    // Hash password
+    // Хэшировать пароль
     const saltRounds = 10;
     const hash = bcrypt.hashSync(adminPassword, saltRounds);
 
-    // Create admin user
+    // Создать администратора
     await db.runAsync(
       "INSERT INTO users (username, password_hash, role, full_name, email) VALUES (?, ?, ?, ?, ?)",
       ['admin', hash, 'admin', 'System Administrator', 'admin@example.com']

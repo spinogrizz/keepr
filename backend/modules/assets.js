@@ -4,24 +4,24 @@ const audit = require('../modules/audit.js');
 
 const router = express.Router();
 
-// Get all assets (with joined details)
+// Получить все активы (с подробностями)
 router.get('/', async (req, res) => {
   try {
     const assets = await db.allAsync("SELECT * FROM assets");
     const result = [];
     for (const asset of assets) {
       const assetObj = { ...asset };
-      // Attach project name
+      // Прикрепить имя проекта
       if (asset.project_id) {
         const proj = await db.getAsync("SELECT name FROM projects WHERE id = ?", [asset.project_id]);
         assetObj.project_name = proj ? proj.name : null;
       }
-      // Attach location name
+      // Прикрепить имя местоположения
       if (asset.location_id) {
         const loc = await db.getAsync("SELECT name FROM locations WHERE id = ?", [asset.location_id]);
         assetObj.location_name = loc ? loc.name : null;
       }
-      // Attach type-specific details
+      // Прикрепить тип-специфичные детали
       if (asset.asset_type === 'CERTIFICATE') {
         const cert = await db.getAsync("SELECT domain_host, cert_file, cert_key_file FROM certificates WHERE asset_id = ?", [asset.id]);
         assetObj.certificate = cert || {};
@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get a single asset by ID (with details)
+// Получить один актив по ID (с подробностями)
 router.get('/:id', async (req, res) => {
   try {
     const assetId = req.params.id;
@@ -74,7 +74,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create a new asset (and its subtype record)
+// Создать новый актив (и его подтип записи)
 router.post('/', async (req, res) => {
   const {
     name, asset_type, project_id, location_id,
@@ -91,7 +91,7 @@ router.post('/', async (req, res) => {
   if (!['DEVICE', 'LICENSE', 'CERTIFICATE'].includes(type)) {
     return res.status(400).json({ message: 'Invalid asset_type' });
   }
-  // Only admin/editor can create (viewer forbidden)
+  // Только администратор/редактор может создавать (viewer запрещен)
   if (req.user && req.user.role === 'viewer') {
     return res.status(403).json({ message: 'Forbidden' });
   }
@@ -113,7 +113,7 @@ router.post('/', async (req, res) => {
       ]
     );
     newAssetId = assetInsert.lastID;
-    // Insert into subtype table
+    // Вставить в подтип таблицу
     if (type === 'DEVICE') {
       await db.runAsync(
         `INSERT INTO devices (asset_id, ip_address, serial_num, model, online) VALUES (?, ?, ?, ?, ?)`,
@@ -130,9 +130,9 @@ router.post('/', async (req, res) => {
         [newAssetId, cert_file || null, cert_key_file || null, domain_host || null]
       );
     }
-    // Log creation
+    // Записать создание
     await audit.logEvent(req.user ? req.user.id : null, newAssetId, 'CREATE', null, { name: name, asset_type: type }, 'Asset created');
-    // Return the new asset (with details)
+    // Вернуть новый актив (с подробностями)
     const createdAsset = await db.getAsync("SELECT * FROM assets WHERE id = ?", [newAssetId]);
     if (type === 'DEVICE') {
       createdAsset.device = await db.getAsync("SELECT ip_address, serial_num, model, last_seen, online FROM devices WHERE asset_id = ?", [newAssetId]);
@@ -151,10 +151,10 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update an existing asset
+// Обновить существующий актив
 router.put('/:id', async (req, res) => {
   const assetId = req.params.id;
-  // Only admin/editor can update
+  // Только администратор/редактор может обновлять
   if (req.user && req.user.role === 'viewer') {
     return res.status(403).json({ message: 'Forbidden' });
   }
@@ -189,7 +189,7 @@ router.put('/:id', async (req, res) => {
         }
       }
     }
-    // Update assets table
+    // Обновить таблицу активов
     if (Object.keys(req.body).some(f => baseFields.includes(f))) {
       const { name, project_id, location_id, responsible, description, creation_date, expiry_date, status } = req.body;
       await db.runAsync(
@@ -206,7 +206,7 @@ router.put('/:id', async (req, res) => {
         [name, project_id, location_id, responsible, description, creation_date, expiry_date, status, assetId]
       );
     }
-    // Update subtype table if needed
+    // Обновить подтип таблицу, если нужно
     if (type === 'DEVICE') {
       const { ip_address, serial_num, model } = req.body;
       if (ip_address || serial_num || model) {
@@ -244,7 +244,7 @@ router.put('/:id', async (req, res) => {
         );
       }
     }
-    // Log the update if any fields changed
+    // Записать обновление, если изменились какие-либо поля
     if (Object.keys(newData).length > 0) {
       await audit.logEvent(req.user ? req.user.id : null, assetId, 'UPDATE', oldData, newData, 'Asset updated');
     }
@@ -264,10 +264,10 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete an asset (and its subtype record via cascade)
+// Удалить актив (и его подтип записи через каскад)
 router.delete('/:id', async (req, res) => {
   const assetId = req.params.id;
-  // Only admin/editor can delete
+  // Только администратор/редактор может удалять
   if (req.user && req.user.role === 'viewer') {
     return res.status(403).json({ message: 'Forbidden' });
   }
@@ -276,7 +276,7 @@ router.delete('/:id', async (req, res) => {
     if (!asset) {
       return res.status(404).json({ message: 'Asset not found' });
     }
-    // Identify asset for logging
+    // Идентифицировать актив для записи
     let identifier = '';
     if (asset.asset_type === 'DEVICE') {
       const dev = await db.getAsync("SELECT ip_address FROM devices WHERE asset_id = ?", [assetId]);
@@ -288,9 +288,9 @@ router.delete('/:id', async (req, res) => {
       const lic = await db.getAsync("SELECT vendor FROM licenses WHERE asset_id = ?", [assetId]);
       identifier = lic && lic.vendor ? lic.vendor : '';
     }
-    // Delete the asset (sub-records removed via foreign key cascade)
+    // Удалить актив (подзаписи удалены через внешний ключ каскада)
     await db.runAsync("DELETE FROM assets WHERE id = ?", [assetId]);
-    // Log deletion event
+    // Записать событие удаления
     const comment = `Asset "${asset.name}" ${identifier ? '('+identifier+') ' : ''}deleted`;
     await audit.logEvent(req.user ? req.user.id : null, assetId, 'DELETE', null, null, comment);
     res.json({ message: 'Asset deleted' });

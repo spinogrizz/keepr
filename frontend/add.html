@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔐 Keepr - Добавление актива</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/add.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <!-- Фиксированная навигация -->
+  <nav class="main-nav">
+    <div class="nav-brand">Keepr</div>
+    <div class="nav-links">
+      <a href="dashboard.html"><i class="fas fa-arrow-left"></i> Назад</a>
+    </div>
+    <div class="nav-user">
+      <span class="user-name">user</span>
+      <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Выход</button>
+    </div>
+  </nav>
+
+  <!-- Основной контент -->
+  <main class="add-content">
+    <div class="form-switcher">
+      <button class="switch-btn active" data-type="device">
+        <i class="fas fa-desktop"></i> Устройство
+      </button>
+      <button class="switch-btn" data-type="license">
+        <i class="fas fa-key"></i> Лицензия
+      </button>
+      <button class="switch-btn" data-type="cert">
+        <i class="fas fa-certificate"></i> Сертификат
+      </button>
+    </div>
+
+    <!-- Форма устройства -->
+    <form id="deviceForm" class="asset-form active">
+      <h2>Добавить новое устройство</h2>
+      <div class="form-group">
+        <label>Название: <input type="text" name="name" required></label>
+      </div>
+      <div class="form-group">
+        <label>IP-адрес: <input type="text" name="ip_address" required></label>
+      </div>
+      <div class="form-group">
+        <label>Серийный номер: <input type="text" name="serial_num"></label>
+      </div>
+      <div class="form-group">
+        <label>Модель: <input type="text" name="model"></label>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Добавить устройство</button>
+        <button type="button" class="btn-secondary" onclick="window.location.href='dashboard.html'">Отмена</button>
+      </div>
+      <p class="error-message"></p>
+    </form>
+
+    <!-- Форма лицензии -->
+    <form id="licenseForm" class="asset-form">
+      <h2>Добавить новую лицензию</h2>
+      <div class="form-group">
+        <label>Название: <input type="text" name="name" required></label>
+      </div>
+      <div class="form-group">
+        <label>Ключ лицензии: <input type="text" name="license_key" required></label>
+      </div>
+      <div class="form-group">
+        <label>Производитель: <input type="text" name="vendor"></label>
+      </div>
+      <div class="form-group">
+        <label>Количество мест: <input type="number" name="seat_count"></label>
+      </div>
+      <div class="form-group">
+        <label>Дата окончания: <input type="date" name="expiry_date"></label>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Добавить лицензию</button>
+        <button type="button" class="btn-secondary" onclick="window.location.href='dashboard.html'">Отмена</button>
+      </div>
+      <p class="error-message"></p>
+    </form>
+
+    <!-- Форма сертификата -->
+    <form id="certForm" class="asset-form">
+      <h2>Добавить новый сертификат</h2>
+      <div class="form-group">
+        <label>Название: <input type="text" name="name" required></label>
+      </div>
+      <div class="form-group">
+        <label>Домен/Хост: <input type="text" name="domain_host" required></label>
+      </div>
+      <div class="form-group">
+        <label>Дата окончания: <input type="date" name="expiry_date" required></label>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Добавить сертификат</button>
+        <button type="button" class="btn-secondary" onclick="window.location.href='dashboard.html'">Отмена</button>
+      </div>
+      <p class="error-message"></p>
+    </form>
+  </main>
+
+  <script src="src/add.js"></script>
+</body>
+</html> 

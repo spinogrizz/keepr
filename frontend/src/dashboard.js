@@ -1,8 +1,5 @@
 // Элементы DOM
 const navLinks = document.querySelectorAll('.nav-links a');
-const actionButtons = document.querySelectorAll('.action-btn');
-const modals = document.querySelectorAll('.modal');
-const forms = document.querySelectorAll('form');
 const eventsList = document.querySelector('.events-list');
 const assetTables = document.querySelector('.asset-tables');
 
@@ -33,22 +30,9 @@ function setupEventListeners() {
   navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
-      const section = e.target.getAttribute('href').substring(1);
+      const section = link.getAttribute('href').substring(1);
       navigateToSection(section);
     });
-  });
-
-  // Кнопки действий
-  actionButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const action = btn.dataset.action;
-      showModal(action);
-    });
-  });
-
-  // Формы
-  forms.forEach(form => {
-    form.addEventListener('submit', handleFormSubmit);
   });
 
   // Выход
@@ -66,73 +50,22 @@ function navigateToSection(section) {
   });
 
   // Показать/скрыть разделы
+  const dashboardStats = document.querySelector('.dashboard-stats');
+  const quickActions = document.querySelector('.quick-actions');
+  // const eventsFeed = document.querySelector('.events-feed');
+  const assetTables = document.querySelector('.asset-tables');
+
   if (section === 'dashboard') {
+    dashboardStats.style.display = 'grid';
+    quickActions.style.display = 'block';
+    // eventsFeed.style.display = 'block';
     assetTables.style.display = 'none';
-    document.querySelector('.dashboard-stats').style.display = 'grid';
-    document.querySelector('.quick-actions').style.display = 'block';
-    document.querySelector('.events-feed').style.display = 'block';
   } else {
-    document.querySelector('.dashboard-stats').style.display = 'none';
-    document.querySelector('.quick-actions').style.display = 'none';
-    document.querySelector('.events-feed').style.display = 'none';
+    dashboardStats.style.display = 'none';
+    quickActions.style.display = 'none';
+    // eventsFeed.style.display = 'none';
     assetTables.style.display = 'block';
     loadAssets(section);
-  }
-}
-
-// Обработка модальных окон
-function showModal(type) {
-  const modal = document.getElementById(`${type}Modal`);
-  if (modal) {
-    modal.style.display = 'flex';
-  }
-}
-
-function closeModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.style.display = 'none';
-    modal.querySelector('form').reset();
-  }
-}
-
-// Обработка форм
-async function handleFormSubmit(e) {
-  e.preventDefault();
-  const form = e.target;
-  const formData = new FormData(form);
-  const data = Object.fromEntries(formData.entries());
-  const type = form.id.replace('Form', '');
-
-  try {
-    const response = await fetch('/api/assets', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + authToken
-      },
-      body: JSON.stringify({
-        ...data,
-        asset_type: type.toUpperCase()
-      })
-    });
-
-    if (response.status === 401) {
-      handleUnauthorized();
-      return;
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Не удалось добавить элемент');
-    }
-
-    closeModal(`${type}Modal`);
-    loadDashboardData();
-    addEvent(`${type} успешно добавлен`, 'success');
-  } catch (error) {
-    const errorElement = form.querySelector('.error-message');
-    errorElement.textContent = error.message;
   }
 }
 
@@ -155,6 +88,7 @@ async function loadDashboardData() {
     
     const assets = await assetsResponse.json();
     
+
     // Расчет статистики из активов
     const stats = {
       equipment: assets.filter(a => a.asset_type === 'DEVICE').length,
@@ -162,6 +96,11 @@ async function loadDashboardData() {
       certificates: assets.filter(a => a.asset_type === 'CERTIFICATE').length,
       alerts: assets.filter(a => a.status !== 'ACTIVE').length
     };
+
+    console.log(assets);
+    console.log(stats);
+    
+    updateStats(stats);
 
     // Загрузка уведомлений для событий
     const notificationsResponse = await fetch('/api/notifications', {
@@ -179,11 +118,9 @@ async function loadDashboardData() {
     
     const notifications = await notificationsResponse.json();
 
-    updateStats(stats);
     updateEvents(notifications);
   } catch (error) {
     console.error('Не удалось загрузить данные панели управления:', error);
-    // Не перенаправлять при ошибке загрузки данных, просто показать ошибку в интерфейсе
     addEvent('Не удалось загрузить данные панели управления: ' + error.message, 'error');
   }
 }
@@ -295,8 +232,26 @@ function getEventIcon(type) {
 
 // Управление активами
 async function editAsset(id) {
-  // TODO: Реализовать функционал редактирования
-  console.log('Редактирование актива:', id);
+  try {
+    const response = await fetch(`/api/assets/${id}`, {
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    });
+
+    if (response.status === 401) {
+      handleUnauthorized();
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error('Не удалось загрузить данные актива');
+    }
+
+    const asset = await response.json();
+    window.location.href = `add.html?type=${asset.asset_type.toLowerCase()}&id=${id}`;
+  } catch (error) {
+    console.error('Не удалось загрузить данные актива:', error);
+    addEvent('Не удалось загрузить данные актива: ' + error.message, 'error');
+  }
 }
 
 async function deleteAsset(id) {
