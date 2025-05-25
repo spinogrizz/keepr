@@ -30,7 +30,7 @@
       <button class="switch-btn" data-type="license">
         <i class="fas fa-key"></i> Лицензия
       </button>
-      <button class="switch-btn" data-type="cert">
+      <button class="switch-btn" data-type="certificate">
         <i class="fas fa-certificate"></i> Сертификат
       </button>
     </div>
@@ -42,6 +42,13 @@
         <label>Название: <input type="text" name="name" required></label>
       </div>
       <div class="form-group">
+        <label>Локация: 
+          <select name="location_id">
+            <option value="">Выберите локацию</option>
+          </select>
+        </label>
+      </div>
+      <div class="form-group">
         <label>IP-адрес: <input type="text" name="ip_address" required></label>
       </div>
       <div class="form-group">
@@ -49,6 +56,13 @@
       </div>
       <div class="form-group">
         <label>Модель: <input type="text" name="model"></label>
+      </div>
+      <div class="form-group">
+        <label>Статус: 
+          <select name="status" id="device-status-select">
+            <!-- Опции будут добавлены динамически -->
+          </select>
+        </label>
       </div>
       <div class="form-actions">
         <button type="submit" class="btn-primary">Добавить устройство</button>
@@ -64,6 +78,13 @@
         <label>Название: <input type="text" name="name" required></label>
       </div>
       <div class="form-group">
+        <label>Проект: 
+          <select name="project_id">
+            <option value="">Выберите проект</option>
+          </select>
+        </label>
+      </div>
+      <div class="form-group">
         <label>Ключ лицензии: <input type="text" name="license_key" required></label>
       </div>
       <div class="form-group">
@@ -75,6 +96,13 @@
       <div class="form-group">
         <label>Дата окончания: <input type="date" name="expiry_date"></label>
       </div>
+      <div class="form-group">
+        <label>Статус: 
+          <select name="status" id="license-status-select">
+            <!-- Опции будут добавлены динамически -->
+          </select>
+        </label>
+      </div>
       <div class="form-actions">
         <button type="submit" class="btn-primary">Добавить лицензию</button>
         <button type="button" class="btn-secondary" onclick="window.location.href='dashboard.html'">Отмена</button>
@@ -83,16 +111,30 @@
     </form>
 
     <!-- Форма сертификата -->
-    <form id="certForm" class="asset-form">
+    <form id="certificateForm" class="asset-form">
       <h2>Добавить новый сертификат</h2>
       <div class="form-group">
         <label>Название: <input type="text" name="name" required></label>
+      </div>
+      <div class="form-group">
+        <label>Проект: 
+          <select name="project_id">
+            <option value="">Выберите проект</option>
+          </select>
+        </label>
       </div>
       <div class="form-group">
         <label>Домен/Хост: <input type="text" name="domain_host" required></label>
       </div>
       <div class="form-group">
         <label>Дата окончания: <input type="date" name="expiry_date" required></label>
+      </div>
+      <div class="form-group">
+        <label>Статус: 
+          <select name="status" id="certificate-status-select">
+            <!-- Опции будут добавлены динамически -->
+          </select>
+        </label>
       </div>
       <div class="form-actions">
         <button type="submit" class="btn-primary">Добавить сертификат</button>
@@ -102,6 +144,8 @@
     </form>
   </main>
 
+  <script src="src/constants.js"></script>
+  <script src="src/user.js"></script>
   <script src="src/add.js"></script>
 </body>
 </html> 

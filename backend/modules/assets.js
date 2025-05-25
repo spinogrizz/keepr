@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db.js');
 const audit = require('../modules/audit.js');
+const { STATUSES, STATUS } = require('../constants/status.js');
 
 const router = express.Router();
 
@@ -109,7 +110,7 @@ router.post('/', async (req, res) => {
         description || null,
         creation_date || null,
         expiry_date || null,
-        1
+        STATUS.ACTIVE
       ]
     );
     newAssetId = assetInsert.lastID;

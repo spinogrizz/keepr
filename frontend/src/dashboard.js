@@ -4,35 +4,36 @@ const eventsList = document.querySelector('.events-list');
 const assetTables = document.querySelector('.asset-tables');
 
 // Состояние
-let currentUser = null;
-let isAdmin = false;
 let authToken = localStorage.getItem('authToken');
 
 // Инициализация
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!authToken) {
-    window.location.href = '/index.html';
+  // Инициализируем пользователя
+  const initialized = await userManager.initialize();
+  if (!initialized) {
     return;
   }
+  
   setupEventListeners();
   loadDashboardData();
 });
 
 // Вспомогательная функция для обработки неавторизованных ответов
 function handleUnauthorized() {
-  localStorage.removeItem('authToken');
-  window.location.href = '/index.html';
+  userManager.handleUnauthorized();
 }
 
 // Обработчики событий
 function setupEventListeners() {
   // Навигация
   navLinks.forEach(link => {
+    if ( link.getAttribute('href').startsWith('#')) {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       const section = link.getAttribute('href').substring(1);
       navigateToSection(section);
     });
+    }
   });
 
   // Выход
@@ -94,7 +95,7 @@ async function loadDashboardData() {
       equipment: assets.filter(a => a.asset_type === 'DEVICE').length,
       licenses: assets.filter(a => a.asset_type === 'LICENSE').length,
       certificates: assets.filter(a => a.asset_type === 'CERTIFICATE').length,
-      alerts: assets.filter(a => a.status !== 'ACTIVE').length
+      alerts: assets.filter(a => a.status !== STATUS.ACTIVE).length
     };
 
     console.log(assets);
@@ -125,6 +126,10 @@ async function loadDashboardData() {
   }
 }
 
+// Состояние сортировки
+let currentSortColumn = null;
+let currentSortDirection = 'asc';
+
 async function loadAssets(type) {
   try {
     const response = await fetch('/api/assets', {
@@ -148,29 +153,78 @@ async function loadAssets(type) {
              type === 'certificates' ? assetType === 'certificate' : false;
     });
     
-    const tbody = document.querySelector('#assetsTable tbody');
-    tbody.innerHTML = filteredAssets.map(asset => `
-      <tr>
-        <td>${asset.name}</td>
-        <td>${asset.asset_type}</td>
-        <td>${asset.project_name || '-'}</td>
-        <td>${asset.location_name || '-'}</td>
-        <td>${asset.status}</td>
-        <td>${getAssetIdentifier(asset)}</td>
-        <td>
-          <button onclick="editAsset('${asset.id}')" class="btn-secondary">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button onclick="deleteAsset('${asset.id}')" class="btn-secondary">
-            <i class="fas fa-trash"></i>
-          </button>
-        </td>
-      </tr>
-    `).join('');
+    // Создаем заголовки таблицы в зависимости от типа
+    createTableHeaders(type);
+    
+    // Отображаем данные
+    displayAssets(filteredAssets, type);
+    
+    // Сбрасываем сортировку
+    currentSortColumn = null;
+    currentSortDirection = 'asc';
+    
   } catch (error) {
     console.error(`Не удалось загрузить ${type}:`, error);
     addEvent(`Не удалось загрузить ${type}: ${error.message}`, 'error');
   }
+}
+
+function createTableHeaders(type) {
+  const thead = document.querySelector('#tableHeaders');
+  let headers = ['Название'];
+  
+  if (type === 'equipment') {
+    headers.push('Расположение', 'Статус', 'IP-адрес', 'Действия');
+  } else if (type === 'licenses') {
+    headers.push('Проект', 'Статус', 'Поставщик', 'Действия');
+  } else if (type === 'certificates') {
+    headers.push('Проект', 'Статус', 'Домен/Хост', 'Действия');
+  }
+  
+  thead.innerHTML = headers.map((header, index) => {
+    const isActionColumn = header === 'Действия';
+    return `<th ${!isActionColumn ? 'class="sortable" onclick="sortTable(' + index + ')"' : ''}>${header}</th>`;
+  }).join('');
+}
+
+function displayAssets(assets, type) {
+  const tbody = document.querySelector('#assetsTable tbody');
+  tbody.innerHTML = assets.map(asset => {
+    let row = `<td>${asset.name}</td>`;
+    
+    if (type === 'equipment') {
+      row += `
+        <td>${asset.location_name || '-'}</td>
+        <td>${getStatusBadge(asset.status)}</td>
+        <td>${getAssetIdentifier(asset)}</td>
+      `;
+    } else if (type === 'licenses') {
+      row += `
+        <td>${asset.project_name || '-'}</td>
+        <td>${getStatusBadge(asset.status)}</td>
+        <td>${getAssetIdentifier(asset)}</td>
+      `;
+    } else if (type === 'certificates') {
+      row += `
+        <td>${asset.project_name || '-'}</td>
+        <td>${getStatusBadge(asset.status)}</td>
+        <td>${getAssetIdentifier(asset)}</td>
+      `;
+    }
+    
+    row += `
+      <td>
+        <button onclick="editAsset('${asset.id}')" class="btn-secondary">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button onclick="deleteAsset('${asset.id}')" class="btn-secondary">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    `;
+    
+    return `<tr>${row}</tr>`;
+  }).join('');
 }
 
 function getAssetIdentifier(asset) {
@@ -184,6 +238,83 @@ function getAssetIdentifier(asset) {
     default:
       return '-';
   }
+}
+
+function getStatusText(status) {
+  // Если status - число, используем STATUSES, иначе пытаемся найти по строке
+  if (typeof status === 'number') {
+    return STATUSES[status] ? STATUSES[status].label : status;
+  } else {
+    // Обратная совместимость для строковых статусов
+    const statusMap = {
+      'ACTIVE': 'Активный',
+      'INACTIVE': 'Неактивный',
+      'EXPIRED': 'Истёк',
+      'PENDING': 'Ожидает',
+      'MAINTENANCE': 'Обслуживание',
+      'DECOMMISSIONED': 'Списан'
+    };
+    return statusMap[status] || status;
+  }
+}
+
+function getStatusBadge(status) {
+  // Возвращает HTML для цветного бейджа статуса
+  if (typeof status === 'number' && STATUSES[status]) {
+    const statusInfo = STATUSES[status];
+    return `<span class="status-badge" style="background-color: ${statusInfo.color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">${statusInfo.label}</span>`;
+  } else {
+    return getStatusText(status);
+  }
+}
+
+// Функция сортировки таблицы
+function sortTable(columnIndex) {
+  const table = document.getElementById('assetsTable');
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const headers = table.querySelectorAll('th');
+  
+  // Определяем направление сортировки
+  if (currentSortColumn === columnIndex) {
+    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+  } else {
+    currentSortDirection = 'asc';
+    currentSortColumn = columnIndex;
+  }
+  
+  // Убираем классы сортировки со всех заголовков
+  headers.forEach(header => {
+    header.classList.remove('sort-asc', 'sort-desc');
+  });
+  
+  // Добавляем класс сортировки к текущему заголовку
+  headers[columnIndex].classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+  
+  // Сортируем строки
+  rows.sort((a, b) => {
+    const aText = a.cells[columnIndex].textContent.trim();
+    const bText = b.cells[columnIndex].textContent.trim();
+    
+    // Проверяем, являются ли значения числами
+    const aNum = parseFloat(aText);
+    const bNum = parseFloat(bText);
+    
+    let comparison = 0;
+    
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+      // Числовая сортировка
+      comparison = aNum - bNum;
+    } else {
+      // Текстовая сортировка
+      comparison = aText.localeCompare(bText, 'ru', { numeric: true });
+    }
+    
+    return currentSortDirection === 'asc' ? comparison : -comparison;
+  });
+  
+  // Перестраиваем таблицу
+  rows.forEach(row => tbody.appendChild(row));
 }
 
 // Обновление интерфейса
@@ -274,7 +405,18 @@ async function deleteAsset(id) {
       throw new Error('Не удалось удалить элемент');
     }
 
+    // Перезагружаем данные панели управления и текущую таблицу
     loadDashboardData();
+    
+    // Определяем текущий активный раздел и перезагружаем таблицу
+    const activeLink = document.querySelector('.nav-links a.active');
+    if (activeLink) {
+      const section = activeLink.getAttribute('href').substring(1);
+      if (section !== 'dashboard') {
+        loadAssets(section);
+      }
+    }
+    
     addEvent('Элемент успешно удален', 'success');
   } catch (error) {
     console.error('Не удалось удалить элемент:', error);

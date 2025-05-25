@@ -17,10 +17,7 @@
       <a href="#equipment"><i class="fas fa-desktop"></i> Оборудование</a>
       <a href="#licenses"><i class="fas fa-key"></i> Лицензии ПО</a>
       <a href="#certificates"><i class="fas fa-certificate"></i> Сертификаты</a>
-      <div class="nav-divider"></div>
-      <a href="#users" class="admin-only"><i class="fas fa-users"></i> Пользователи</a>
       <a href="other.html" class="admin-only"><i class="fas fa-cogs"></i> Прочее</a>
-      <a href="#settings" class="admin-only"><i class="fas fa-cog"></i> Настройки</a>
     </div>
     <div class="nav-user">
       <span class="user-name">user</span>
@@ -87,14 +84,8 @@
       <div class="table-container">
         <table id="assetsTable">
           <thead>
-            <tr>
-              <th>Название</th>
-              <th>Тип</th>
-              <th>Проект</th>
-              <th>Расположение</th>
-              <th>Статус</th>
-              <th>Идентификатор</th>
-              <th>Действия</th>
+            <tr id="tableHeaders">
+              <!-- заголовки будут добавлены динамически -->
             </tr>
           </thead>
           <tbody>
@@ -105,6 +96,8 @@
     </section>
   </main>
 
+  <script src="src/constants.js"></script>
+  <script src="src/user.js"></script>
   <script src="src/dashboard.js"></script>
 </body>
 </html>

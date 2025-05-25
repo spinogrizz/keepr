@@ -1,12 +1,13 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const API_BASE_URL = '/api'; // Assuming your API routes are prefixed with /api
   
-  // Проверка авторизации
-  let authToken = localStorage.getItem('authToken');
-  if (!authToken) {
-    window.location.href = '/index.html';
+  // Инициализируем пользователя
+  const initialized = await userManager.initialize();
+  if (!initialized) {
     return;
   }
+  
+  let authToken = localStorage.getItem('authToken');
 
   // DOM Elements for Projects
   const projectsList = document.getElementById('projects-list');
@@ -36,8 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Helper Functions ---
   // Вспомогательная функция для обработки неавторизованных ответов
   function handleUnauthorized() {
-    localStorage.removeItem('authToken');
-    window.location.href = '/index.html';
+    userManager.handleUnauthorized();
   }
 
   async function fetchData(endpoint) {

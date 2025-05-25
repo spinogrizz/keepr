@@ -136,11 +136,6 @@ body {
   background-color: #e4e6e9;
 }
 
-/* Admin-only elements */
-.admin-only {
-  display: none;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
   .main-nav {

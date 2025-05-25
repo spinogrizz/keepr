@@ -33,6 +33,26 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Получить информацию о текущем пользователе (GET /api/auth/me)
+router.get('/me', authenticateToken, async (req, res) => {
+  try {
+    // Получаем полную информацию о пользователе из базы данных
+    const user = await db.getAsync(
+      "SELECT id, username, role, full_name, email FROM users WHERE id = ?", 
+      [req.user.id]
+    );
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (err) {
+    console.error("Error fetching user info:", err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Middleware аутентификации – проверяет JWT токен
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];

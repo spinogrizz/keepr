@@ -59,8 +59,8 @@
       </div>
       <form id="user-form" class="item-form">
         <input type="hidden" id="user-id">
-        <input type="text" id="user-username" placeholder="Имя пользователя" required>
-        <input type="password" id="user-password" placeholder="Пароль (оставьте пустым чтобы не менять)">
+        <input type="text" id="user-username" placeholder="Имя пользователя" required autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <input type="password" id="user-password" placeholder="Пароль" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false">
         <input type="text" id="user-full-name" placeholder="Полное имя">
         <input type="email" id="user-email" placeholder="Email">
         <select id="user-role" required>
@@ -73,6 +73,8 @@
     </section>
   </main>
 
-  <script src="src/other.js"></script> <!-- We'll create this later -->
+  <script src="src/constants.js"></script>
+  <script src="src/user.js"></script>
+  <script src="src/other.js"></script>
 </body>
 </html> 
